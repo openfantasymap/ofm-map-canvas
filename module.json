@@ -1,0 +1,17 @@
+{
+  "name": "ofm-map-canvas",
+  "title": "FantasyMaps map canvas",
+  "description": "Create scenes with FantasyMaps vectors.",
+  "version": "This is auto replaced",
+  "library": "false",
+  "manifestPlusVersion": "1.0.0",
+  "minimumCoreVersion": "0.8.9",
+  "compatibleCoreVersion": "0.8.9",
+  "author": "FantasyMaps [OpenHistoryMap team]",
+  "esmodules": [
+    "modules/map-canvas.js"
+  ],
+  "url": "This is auto replaced",
+  "manifest": "This is auto replaced",
+  "download": "This is auto replaced"
+}
