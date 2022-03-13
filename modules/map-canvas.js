@@ -299,7 +299,7 @@ class MapCanvas extends Application {
 
     static async registerSettings() {
 
-        const options = 
+        const options = await $.getJSON("https://vectors.fantasymaps.org/options");
         
         await game.settings.register('ofm-map-canvas', 'DEFAULT_SCENE', {
             name: 'Default Scene Name',
@@ -338,10 +338,7 @@ class MapCanvas extends Application {
             scope: 'world',
             config: true,
             type: String,
-            choices: {
-                toril: 'Toril',
-                golarion: 'Golarion'
-            },
+            choices: options,
         });
 
         await game.settings.register('ofm-map-canvas', "DEFAULT_MAP_STYLE", {
