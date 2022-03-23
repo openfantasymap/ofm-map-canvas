@@ -4,14 +4,20 @@
   "description": "Create scenes with FantasyMaps vectors.",
   "version": "This is auto replaced",
   "library": "false",
-  "manifestPlusVersion": "1.0.0",
+  "manifestPlusVersion": "0.0.1",
   "minimumCoreVersion": "0.8.9",
   "compatibleCoreVersion": "0.8.9",
   "author": "FantasyMaps [OpenHistoryMap team]",
   "esmodules": [
     "modules/map-canvas.js"
   ],
-  "url": "This is auto replaced",
-  "manifest": "This is auto replaced",
-  "download": "This is auto replaced"
+  "url": "https://github.com/openfantasymap/ofm-map-canvas/tree/main",
+  "manifest": "raw.githubusercontent.com/openfantasymap/ofm-map-canvas/main/module.json",
+  "download": "This is auto replaced",
+  "dependencies": [
+    {
+      "name": "baileywiki-maps",
+      "manifest": "https://storage.googleapis.com/baileywiki/free/latest-version/module.json"
+    }
+  ]
 }
