@@ -26,9 +26,9 @@ class MapDialog extends FormApplication {
 
     static get defaultOptions() {
         let opts = super.defaultOptions;
-        opts.id = "mapCanvasDialog";
-        opts.base = "mc_";
-        opts.title = "Map Canvas";
+        opts.id = "ofmMapCanvasDialog";
+        opts.base = "ofmc_";
+        opts.title = "FantasyMaps.org Canvas";
         opts.template = "modules/ofm-map-canvas/templates/map-canvas.html";
         opts.resizable = true;
         opts.isEditable = false;
@@ -161,7 +161,7 @@ class MapCanvas extends Application {
 
         // Register our settings
         Hooks.once('init', () => {
-            MapCanvas.registerSettings().then(() => console.log("MapCanvas Settings Registered."));
+            MapCanvas.registerSettings(options).then(() => console.log("MapCanvas Settings Registered."));
         });
     }
 
@@ -197,8 +197,8 @@ class MapCanvas extends Application {
             ]
 
             const hudControl = {
-                name: "mapcanvas",
-                title: "Map Canvas",
+                name: "ofmmapcanvas",
+                title: "OFM Map Canvas",
                 icon: "fas fa-globe",
                 layer: "controls",
                 tools: canvasTools,
@@ -237,9 +237,12 @@ class MapCanvas extends Application {
             await canvas.lighting.deleteAll();
             await canvas.walls.deleteAll();
             await canvas.tokens.deleteAll();
+            await canvas.foreground.objects.destroy();
+            await canvas.background.objects.destroy()
             await canvas.sight.resetFog();
 
-
+            const LICENSE = game.settings.get("ofm-map-canvas", "LICENSE");
+            const WORLD_TO_LOAD = game.settings.get("ofm-map-canvas", "WORLD_TO_LOAD");
 
             console.log('getting walls and lights for...')
             const doc = document.querySelector('#mapData').value;
@@ -248,8 +251,9 @@ class MapCanvas extends Application {
 
             const bbox = [jdoc.bounds._sw.lng, jdoc.bounds._sw.lat, jdoc.bounds._ne.lng, jdoc.bounds._ne.lat];
 
-            const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/toril?width=6400&height=4800&bbox=['+bbox.join(',')+']&zoom='+jdoc.zoom);
+            const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/'+ WORLD_TO_LOAD +'?width=6400&height=4800&bbox=['+bbox.join(',')+']&zoom='+jdoc.zoom+'&key=LICENSE');
 
+            console.log(vectors.tiles);
 
             let updates = {
                 _id: scene.id,
@@ -267,6 +271,7 @@ class MapCanvas extends Application {
                 walls: vectors.walls,
                 lights: vectors.lights,
                 tokens: vectors.tokens,
+                tiles: vectors.tiles,
             }
             
 
@@ -297,9 +302,8 @@ class MapCanvas extends Application {
         return { dataUrl: tempImage.src, dems: imageDems } ;
     }
 
-    static async registerSettings() {
+    static async registerSettings(options) {
 
-        const options = await $.getJSON("https://vectors.fantasymaps.org/options");
         
         await game.settings.register('ofm-map-canvas', 'DEFAULT_SCENE', {
             name: 'Default Scene Name',
@@ -337,8 +341,11 @@ class MapCanvas extends Application {
             hint: 'Fantasy map to load',
             scope: 'world',
             config: true,
-            type: String,
-            choices: options,
+            default: 'toril',
+            choices: {
+                toril: "Toril",
+            },
+            type: String
         });
 
         await game.settings.register('ofm-map-canvas', "DEFAULT_MAP_STYLE", {
