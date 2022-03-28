@@ -6,4 +6,4 @@ OFM Map Canvas provides a dialog box containing a FantasyMaps view port allowing
 
 Walls, lights and scenery are generated based on the vectors on the platform. 
 
-![Map view](Map view.png "Map view")
+![Map view]("/Map view.png" "Map view")
