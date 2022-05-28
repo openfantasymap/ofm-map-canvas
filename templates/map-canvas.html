@@ -25,18 +25,35 @@
 
     #mapCanvasZoomLevel {
         align-self: end;
-        max-width: 30px;
+        max-width: 100px;
+    }
+    #mapCanvasLon {
+        align-self: end;
+        max-width: 100px;
+    }
+    #mapCanvasLat {
+        align-self: end;
+        max-width: 100px;
+    }
+    .label{
+        display: inline-block;
+        height: 25px;
+        vertical-align: center;
     }
 </style>
 
 <form id="mapPortalForm">
     <div id="mapCanvasContainer">
         <div id="inputHolder" style="display: flex">
-            <input type="text" id="mapCanvasZoomLevel" value="" placeholder="z" style="align-self: flex-start" disabled>
-            <input type="hidden" id="mapData" value="">
             <input type="button" onClick="updateScene()" value="Update Scene">
             <input type="button" onClick="generateScene()" value="Generate Scene">
+            <input type="hidden" id="mapData" value="">
+            <span class="spacer" style="flex: 1 1 10px"></span>
             <!--<input type="button" onClick="toggleLabels()" value="Labels">-->
+            <span class="label">Time:</span><input type="text" id="mapCanvasTime" value="" placeholder="t" style="align-self: flex-end" disabled>
+            <span class="label">Z:</span><input type="text" id="mapCanvasZoomLevel" value="" placeholder="z" style="align-self: flex-end" disabled>
+            <span class="label">X:</span><input type="text" id="mapCanvasLon" value="" placeholder="x" style="align-self: flex-end" disabled>
+            <span class="label">Y:</span><input type="text" id="mapCanvasLat" value="" placeholder="y" style="align-self: flex-end" disabled>
         </div>
         <div class="mapPortal" id="mapPortal"></div>
     </div>

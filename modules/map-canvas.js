@@ -1,6 +1,3 @@
-import {MAP_STYLES} from "./map-canvas-styles.js";
-import {ImageDataConverter} from "./image-data-converter.js";
-
 class MapDialog extends FormApplication {
 
     constructor(object, options) {
@@ -13,9 +10,12 @@ class MapDialog extends FormApplication {
         Hooks.once('renderApplication', async () => {
             if(!window['ofmmapcanvas'].apiLoaded) {
                 await $.getScript('https://polyfill.io/v3/polyfill.min.js?features=default', () => {});
-                await $.getScript('https://unpkg.com/maplibre-gl@2.1.6/dist/maplibre-gl.js', () => {});
+                await $.getScript('https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.js', () => {});
+                const LICENSE = game.settings.get("ofm-map-canvas", "LICENSE");
+                //window['ofmmapcanvas'].options = await $.getJSON('https://vectors.fantasymaps.org/options/?key=' + LICENSE);
                 window['ofmmapcanvas'].apiLoaded = true;  // We assume.
             }
+
 
             MapDialog.initMap();
         });
@@ -39,23 +39,19 @@ class MapDialog extends FormApplication {
 
     static getMapStyle() {
         let styleJSON = [];
-        const mapCanvasStyle = game.settings.get("ofm-map-canvas", "DEFAULT_MAP_STYLE");
 
-        if(mapCanvasStyle.toUpperCase() === "CUSTOM" ) { // If they're using custom we have to parse the string to JSON.
-            styleJSON = JSON.parse(game.settings.get("ofm-map-canvas", "CUSTOM_MAP_STYLE_JSON"));
-        } else {
-            styleJSON = MAP_STYLES[mapCanvasStyle.toUpperCase()];
-        }
 
         return styleJSON;
     }
 
-    // 40.7571, -73.8458 - Citi Field, Queens, NY - LET'S GO METS!
     static initMap(center) {
 
         MapDialog.mapPortal = {};
         MapDialog.mapPortalElem = document.querySelector('#mapPortal');
         MapDialog.zoomLevelElem = document.querySelector('#mapCanvasZoomLevel');
+        MapDialog.lonElem = document.querySelector('#mapCanvasLon');
+        MapDialog.latElem = document.querySelector('#mapCanvasLat');
+        MapDialog.timeElem = document.querySelector('#mapCanvasTime');
         MapDialog.viewport = {};
         MapDialog.viewportData = document.querySelector('#mapData');
 
@@ -63,13 +59,17 @@ class MapDialog extends FormApplication {
         MapDialog.mapPortal = new maplibregl.Map({
             container: 'mapPortal',
             style: 'https://static.fantasymaps.org/' + WORLD_TO_LOAD + '/map.json', // stylesheet location
-            center: [-74.5, 40], // starting position [lng, lat]
-            zoom: 9, // starting zoom,
-            preserveDrawingBuffer: true
-            });
+            center: [12.986957228973097,43.791492389927406 ], // starting position [lng, lat]
+            zoom: 11, // starting zoom,
+        });
+        MapDialog.mapPortal.dragRotate.disable();
+        MapDialog.mapPortal.touchZoomRotate.disableRotation();
 
         MapDialog.mapPortal.on('moveend', async (e) => {
+            const {lng, lat} = MapDialog.mapPortal.getCenter();
             MapDialog.zoomLevelElem.value = MapDialog.mapPortal.getZoom();
+            MapDialog.latElem.value = lat;
+            MapDialog.lonElem.value = lng;
             MapDialog.viewport = {zoom: MapDialog.mapPortal.getZoom(), bounds: MapDialog.mapPortal.getBounds()};
             MapDialog.viewportData.value = JSON.stringify(MapDialog.viewport);
         });
@@ -111,18 +111,16 @@ class MapDialog extends FormApplication {
             map.fitBounds(bounds);
         });
 
+        if(SimpleCalendar){
+            Hooks.on(SimpleCalendar.Hooks.DateTimeChange, (data) => {
+                console.log(data);
+              });             
+        }
+
     }
 
     toggleLabels() {
-        // Unfortunately this will effectively overwrite label visibility styling defined by any custom style.
-        if(MapDialog.labelsOn) {
-            MapDialog.mapPortal.set('styles', MAP_STYLES.LABELS_OFF);
-            MapDialog.labelsOn = false;
-        } else {
-            MapDialog.mapPortal.set('styles', MAP_STYLES.LABELS_ON);
-            MapDialog.labelsOn = true;
-        }
-
+        
     }
 
     getData(options = {}) {
@@ -231,53 +229,72 @@ class MapCanvas extends Application {
             });
         }
 
-        await MapCanvas.getMapCanvasImage().then(async (image) => {
-            // TODO: Make some of these user-definable. Perhaps leveraging Scene.createDialog().
+        const LICENSE = game.settings.get("ofm-map-canvas", "LICENSE");
+        const WORLD_TO_LOAD = game.settings.get("ofm-map-canvas", "WORLD_TO_LOAD");
+        const WIDTH = game.settings.get("ofm-map-canvas", "WIDTH");
+        const HEIGHT = game.settings.get("ofm-map-canvas", "HEIGHT");
 
-            await canvas.lighting.deleteAll();
-            await canvas.walls.deleteAll();
-            await canvas.tokens.deleteAll();
-            await canvas.foreground.objects.destroy();
-            await canvas.background.objects.destroy()
-            await canvas.sight.resetFog();
+        console.log('getting walls and lights for...')
+        const doc = document.querySelector('#mapData').value;
+        const jdoc = JSON.parse(doc);
+        console.log(jdoc)
 
-            const LICENSE = game.settings.get("ofm-map-canvas", "LICENSE");
-            const WORLD_TO_LOAD = game.settings.get("ofm-map-canvas", "WORLD_TO_LOAD");
+        const bbox = [jdoc.bounds._sw.lng, jdoc.bounds._sw.lat, jdoc.bounds._ne.lng, jdoc.bounds._ne.lat];
 
-            console.log('getting walls and lights for...')
-            const doc = document.querySelector('#mapData').value;
-            const jdoc = JSON.parse(doc);
-            console.log(jdoc)
+        const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/'+ WORLD_TO_LOAD +'?width='+WIDTH+'&height='+HEIGHT+'&bbox=['+bbox.join(',')+']&zoom='+jdoc.zoom+'&key=LICENSE');
 
-            const bbox = [jdoc.bounds._sw.lng, jdoc.bounds._sw.lat, jdoc.bounds._ne.lng, jdoc.bounds._ne.lat];
+        console.log(vectors.tiles);
 
-            const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/'+ WORLD_TO_LOAD +'?width=6400&height=4800&bbox=['+bbox.join(',')+']&zoom='+jdoc.zoom+'&key=LICENSE');
 
-            console.log(vectors.tiles);
+        await canvas.lighting.deleteAll();
+        await canvas.walls.deleteAll();
+        await canvas.tokens.deleteAll();
+        await canvas.foreground.objects.destroy();
+        await canvas.background.objects.destroy()
+        await canvas.sight.resetFog();
 
-            let updates = {
-                _id: scene.id,
-                img: image.dataUrl,
-                bgSource: image.dataUrl,
-                width: 6400,
-                height: 4800,
-                padding: 0,
-                gridType: 1,
-                grid:100,
-                gridColor:"#000000",
-                gridAlpha:0.2,
-                gridDistance:5,
-                gridUnits:"ft",
-                walls: vectors.walls,
-                lights: vectors.lights,
-                tokens: vectors.tokens,
-                tiles: vectors.tiles,
-            }
-            
+        let updates = {
+            _id: scene.id,
+            width: WIDTH,
+            bgSource: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
+            //img: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
+            height: HEIGHT,
+            padding: 0,
+            gridType: 1,
+            grid:50,
+            gridColor:"#000000",
+            gridAlpha:0.2,
+            gridDistance:5,
+            gridUnits:"ft",
+            walls: vectors.walls,
+            lights: vectors.lights,
+            //tokens: vectors.tokens,
+            tiles: vectors.tiles,
+        };
 
-            await Scene.updateDocuments([updates]).then(() => {
-                ui.notifications.info(" Map Canvas | Updated Scene: " + sceneName)
-            });
+        
+        //fetch('https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '?width=6400&height=4800&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE')
+        //    .then(res => res.blob())
+        //    .then(blob => {
+        //        const tempFile = new File([blob], fileName, {
+        //            type: "image/jpeg",
+        //            lastModified: new Date(),
+        //        });
+        //        
+        //        await FilePicker.createDirectory('user', 'ofm-scenes').catch((e) => {
+        //            if (!e.startsWith("EEXIST")) console.log(e);
+        //        });
+//
+        //        await FilePicker.upload('data', 'ofm-scenes', tempFile).then((res) => {
+        //            updates.bgSource = res.path;
+        //            updates.img = res.path;
+        //        });
+        //    });
+
+        
+
+        await Scene.updateDocuments([updates]).then(() => {
+            ui.notifications.info(" Map Canvas | Updated Scene: " + sceneName)
         });
     }
 
@@ -300,7 +317,7 @@ class MapCanvas extends Application {
         //MapDialog.mapPortal.setOptions({ disableDefaultUI: false }); // Put the map controls back.
 
         return { dataUrl: tempImage.src, dems: imageDems } ;
-    }
+    } 
 
     static async registerSettings(options) {
 
@@ -336,6 +353,7 @@ class MapCanvas extends Application {
             filePicker: false,
         });
 
+        console.log(window['ofmmapcanvas'].options);
         await game.settings.register('ofm-map-canvas', 'WORLD_TO_LOAD', {
             name: 'Fantasy Map to load',
             hint: 'Fantasy map to load',
@@ -344,26 +362,32 @@ class MapCanvas extends Application {
             default: 'toril',
             choices: {
                 toril: "Toril",
+                barovia: "Barovia",
+                osm: "OpenStreetMap",
             },
             type: String
         });
 
-        await game.settings.register('ofm-map-canvas', "DEFAULT_MAP_STYLE", {
-            name: 'Default Maps Style',
-            hint: 'See: https://mapstyle.withgoogle.com/',
+        await game.settings.register('ofm-map-canvas', 'WIDTH', {
+            name: 'Width of the scene',
+            hint: 'Width of the scene to use',
             scope: 'world',
             config: true,
-            type: String,
-            choices: {
-                Standard: "Standard",
-                Silver: "Silver",
-                Retro: "Retro",
-                Dark: "Dark",
-                Night: "Night",
-                Aubergine: "Aubergine",
-                Custom: "Custom"
-            },
+            type: Number,
+            default: 2400,
+            filePicker: false,
         });
+        
+        await game.settings.register('ofm-map-canvas', 'HEIGHT', {
+            name: 'Height of the scene',
+            hint: 'Height of the scene to use',
+            scope: 'world',
+            config: true,
+            type: Number,
+            default: 1600,
+            filePicker: false,
+        });
+
     }
 
     // A failed stab at canvas based image scaling lifted from SO for rendering cleaner scaled scene backgrounds.

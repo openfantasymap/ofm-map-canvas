@@ -14,10 +14,5 @@
   "url": "https://github.com/openfantasymap/ofm-map-canvas/tree/main",
   "manifest": "raw.githubusercontent.com/openfantasymap/ofm-map-canvas/main/module.json",
   "download": "This is auto replaced",
-  "dependencies": [
-    {
-      "name": "baileywiki-maps",
-      "manifest": "https://storage.googleapis.com/baileywiki/free/latest-version/module.json"
-    }
-  ]
+  "dependencies": []
 }
