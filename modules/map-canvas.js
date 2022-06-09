@@ -56,9 +56,17 @@ class MapDialog extends FormApplication {
         MapDialog.viewportData = document.querySelector('#mapData');
 
         const WORLD_TO_LOAD = game.settings.get("ofm-map-canvas", "WORLD_TO_LOAD");
+        let localStyle = "";
+        if (WORLD_TO_LOAD === "osm"){
+            localStyle = 'https://api.maptiler.com/maps/streets/style.json?key=RjQQbPOWzLIiBsj333Xv';
+        } else if (WORLD_TO_LOAD === 'ohm') {
+            localStyle = '';
+        } else {
+            localStyle = 'https://static.fantasymaps.org/' + WORLD_TO_LOAD + '/map.json';
+        }
         MapDialog.mapPortal = new maplibregl.Map({
             container: 'mapPortal',
-            style: 'https://static.fantasymaps.org/' + WORLD_TO_LOAD + '/map.json', // stylesheet location
+            style: localStyle, // stylesheet location
             center: [12.986957228973097,43.791492389927406 ], // starting position [lng, lat]
             zoom: 11, // starting zoom,
         });
@@ -256,9 +264,9 @@ class MapCanvas extends Application {
         let updates = {
             _id: scene.id,
             width: WIDTH,
-            bgSource: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
-            //img: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
             height: HEIGHT,
+            //bgSource: 
+            //img: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
             padding: 0,
             gridType: 1,
             grid:50,
@@ -270,28 +278,13 @@ class MapCanvas extends Application {
             lights: vectors.lights,
             //tokens: vectors.tokens,
             tiles: vectors.tiles,
-        };
-
+        };     
         
-        //fetch('https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '?width=6400&height=4800&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE')
-        //    .then(res => res.blob())
-        //    .then(blob => {
-        //        const tempFile = new File([blob], fileName, {
-        //            type: "image/jpeg",
-        //            lastModified: new Date(),
-        //        });
-        //        
-        //        await FilePicker.createDirectory('user', 'ofm-scenes').catch((e) => {
-        //            if (!e.startsWith("EEXIST")) console.log(e);
-        //        });
-//
-        //        await FilePicker.upload('data', 'ofm-scenes', tempFile).then((res) => {
-        //            updates.bgSource = res.path;
-        //            updates.img = res.path;
-        //        });
-        //    });
-
-        
+        if(WORLD_TO_LOAD === 'osm'){
+            updates['bgSource'] = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE';
+        } else {
+            updates['bgSource'] = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE';
+        }
 
         await Scene.updateDocuments([updates]).then(() => {
             ui.notifications.info(" Map Canvas | Updated Scene: " + sceneName)
