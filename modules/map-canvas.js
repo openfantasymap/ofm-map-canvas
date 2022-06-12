@@ -262,7 +262,7 @@ class MapCanvas extends Application {
 
         const bbox = [jdoc.bounds._sw.lng, jdoc.bounds._sw.lat, jdoc.bounds._ne.lng, jdoc.bounds._ne.lat];
 
-        const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/'+ WORLD_TO_LOAD +'?width='+WIDTH+'&height='+HEIGHT+'&bbox=['+bbox.join(',')+']&zoom='+jdoc.zoom+'&key=LICENSE');
+        const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/'+ WORLD_TO_LOAD +'?width='+WIDTH+'&height='+HEIGHT+'&bbox=['+bbox.join(',')+']&zoom='+jdoc.zoom+'&key='+LICENSE);
 
         console.log(vectors.tiles);
 
@@ -282,17 +282,21 @@ class MapCanvas extends Application {
             await FilePicker.createDirectory('data', 'ofm-map-canvas');
         } catch(ex){ }
 
-        const url = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE';
+        const url = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key='+LICENSE;
+        console.log(url)
         const data = await fetch(url);
-        const fil = new File([await data.blob()], scene.id+'.jpeg');
-        await FilePicker.upload('data', 'ofm-map-canvas', scene.id);
+        console.log(data)
+        const fil = new File([await data.blob()], sceneName+'.jpeg');
+        console.log(fil)
+        const fu = await FilePicker.upload('data', 'ofm-map-canvas', fil);
+        console.log(fu);
 
 
         let updates = {
             _id: scene.id,
             width: WIDTH,
             height: HEIGHT,
-            bgSource: 'ofm-map-canvas/'+scene.id+".jpeg",
+            bgSource: 'bgSource/'+sceneName+".jpeg",
             //img: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
             padding: 0,
             gridType: 1,
