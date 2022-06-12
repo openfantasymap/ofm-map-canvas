@@ -238,10 +238,6 @@ class MapCanvas extends Application {
         const jdoc = JSON.parse(doc);
         console.log(jdoc)
 
-        if(jdoc.zoom < 18.5){
-            alert('I cannot render a battlemap at this level of zoom');
-            return false;
-        }
         const DEFAULT_SCENE = game.settings.get("ofm-map-canvas", "DEFAULT_SCENE");
         const sceneName = (generateNewScene) ? DEFAULT_SCENE+"_"+new Date().getTime() : DEFAULT_SCENE;
         let scene = game.scenes.find(s => s.name.startsWith(sceneName));
@@ -296,7 +292,7 @@ class MapCanvas extends Application {
             _id: scene.id,
             width: WIDTH,
             height: HEIGHT,
-            bgSource: 'bgSource/'+sceneName+".jpeg",
+            bgSource: 'ofm-map-canvas/'+sceneName+".jpeg",
             //img: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
             padding: 0,
             gridType: 1,
