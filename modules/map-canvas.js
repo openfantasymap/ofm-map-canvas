@@ -293,7 +293,7 @@ class MapCanvas extends Application {
             width: WIDTH,
             height: HEIGHT,
             bgSource: 'ofm-map-canvas/'+sceneName+".jpeg",
-            //img: 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key=LICENSE',
+            img: 'ofm-map-canvas/'+sceneName+".jpeg",
             padding: 0,
             gridType: 1,
             grid:50,
