@@ -21,6 +21,9 @@
         justify-content: center;
         height: 768px;
         width: 1024px;
+        
+        top: 57px;
+        position: absolute;
     }
 
     #mapCanvasZoomLevel {
@@ -39,17 +42,21 @@
         display: inline-block;
         height: 25px;
         vertical-align: center;
+        line-height: 26px;
+        padding-left: 6px;
+        padding-right: 2px;
     }
 </style>
 
 <form id="mapPortalForm">
     <div id="mapCanvasContainer">
         <div id="inputHolder" style="display: flex">
-            <input type="button" onClick="updateScene()" value="Update Scene">
-            <input type="button" onClick="generateScene()" value="Generate Scene">
+            <!--<input type="button" id="updateBtn" onClick="updateScene()" value="Update Scene">-->
+            <input type="button" id="generateBtn" onClick="generateScene()" value="Generate Scene">
             <input type="hidden" id="mapData" value="">
             <span class="spacer" style="flex: 1 1 10px"></span>
             <!--<input type="button" onClick="toggleLabels()" value="Labels">-->
+            <!--<span class="label">Search:</span><input type="text" id="mapCanvasTime" value="" placeholder="search" style="align-self: flex-end" onkeyup="onKeyUp()">-->
             <span class="label">Time:</span><input type="text" id="mapCanvasTime" value="" placeholder="t" style="align-self: flex-end" disabled>
             <span class="label">Z:</span><input type="text" id="mapCanvasZoomLevel" value="" placeholder="z" style="align-self: flex-end" disabled>
             <span class="label">X:</span><input type="text" id="mapCanvasLon" value="" placeholder="x" style="align-self: flex-end" disabled>
@@ -68,6 +75,10 @@
    }
    function toggleLabels() {
        Hooks.call('mapCanvasToggleLabels');
+   }
+
+   function onKeyUp(){
+       Hooks.call('onKeyUp');
    }
 </script>
 

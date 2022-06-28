@@ -15,13 +15,9 @@ class MapDialog extends FormApplication {
                 //window['ofmmapcanvas'].options = await $.getJSON('https://vectors.fantasymaps.org/options/?key=' + LICENSE);
                 window['ofmmapcanvas'].apiLoaded = true;  // We assume.
             }
-
-
             MapDialog.initMap();
         });
 
-        Hooks.on('mapCanvasToggleLabels', this.toggleLabels);
-        MapDialog.labelsOn = true;
     }
 
     static get defaultOptions() {
@@ -52,6 +48,8 @@ class MapDialog extends FormApplication {
         MapDialog.lonElem = document.querySelector('#mapCanvasLon');
         MapDialog.latElem = document.querySelector('#mapCanvasLat');
         MapDialog.timeElem = document.querySelector('#mapCanvasTime');
+        MapDialog.updateBtn = document.querySelector('#updateBtn');
+        MapDialog.generateBtn = document.querySelector('#generateBtn');
         MapDialog.viewport = {};
         MapDialog.viewportData = document.querySelector('#mapData');
 
@@ -80,6 +78,9 @@ class MapDialog extends FormApplication {
             MapDialog.lonElem.value = lng;
             MapDialog.viewport = {zoom: MapDialog.mapPortal.getZoom(), bounds: MapDialog.mapPortal.getBounds()};
             MapDialog.viewportData.value = JSON.stringify(MapDialog.viewport);
+            console.log(MapDialog.generateBtn);
+            $(MapDialog.generateBtn).val("Generate Scene (with"+(MapDialog.zoomLevelElem.value > 18.5?" ":"out ")+"walls)");
+            $(MapDialog.updateBtn).val("Update Scene (with"+(MapDialog.zoomLevelElem.value > 18.5?" ":"out ")+"walls)");
         });
     }
 
@@ -99,9 +100,6 @@ class MapDialog extends FormApplication {
             if (places.length === 0) {
                 return;
             }
-
-            // For each place, get the icon, name and location.
-            const bounds = new google.maps.LatLngBounds();
 
             places.forEach((place) => {
                 if (!place.geometry || !place.geometry.location) {
@@ -127,9 +125,6 @@ class MapDialog extends FormApplication {
 
     }
 
-    toggleLabels() {
-        
-    }
 
     getData(options = {}) {
         return super.getData().object;
@@ -229,18 +224,22 @@ class MapCanvas extends Application {
 
     async updateScene(generateNewScene = false) {
         const LICENSE = game.settings.get("ofm-map-canvas", "LICENSE");
+        const RENDER_MODE = game.settings.get("ofm-map-canvas", "RENDER_MODE");
         const WORLD_TO_LOAD = game.settings.get("ofm-map-canvas", "WORLD_TO_LOAD");
         let WIDTH = game.settings.get("ofm-map-canvas", "WIDTH");
         let HEIGHT = game.settings.get("ofm-map-canvas", "HEIGHT");
 
         console.log('getting walls and lights for...')
         const doc = document.querySelector('#mapData').value;
+        console.log(doc);
         const jdoc = JSON.parse(doc);
-        console.log(jdoc)
+        console.log(jdoc);
 
         const DEFAULT_SCENE = game.settings.get("ofm-map-canvas", "DEFAULT_SCENE");
         const sceneName = (generateNewScene) ? DEFAULT_SCENE+"_"+new Date().getTime() : DEFAULT_SCENE;
         let scene = game.scenes.find(s => s.name.startsWith(sceneName));
+
+        
 
         if(!scene) {
             // Create our scene if we don't have it.
@@ -278,7 +277,7 @@ class MapCanvas extends Application {
             await FilePicker.createDirectory('data', 'ofm-map-canvas');
         } catch(ex){ }
 
-        const url = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key='+LICENSE;
+        const url = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key='+LICENSE + "&mode=" + RENDER_MODE;
         console.log(url)
         const data = await fetch(url);
         console.log(data)
@@ -363,7 +362,6 @@ class MapCanvas extends Application {
             filePicker: false,
         });
 
-        console.log(window['ofmmapcanvas'].options);
         await game.settings.register('ofm-map-canvas', 'WORLD_TO_LOAD', {
             name: 'Fantasy Map to load',
             hint: 'Fantasy map to load',
@@ -374,6 +372,21 @@ class MapCanvas extends Application {
                 toril: "Toril",
                 barovia: "Barovia",
                 osm: "OpenStreetMap",
+            },
+            type: String
+        });
+
+        
+        await game.settings.register('ofm-map-canvas', 'RENDER_MODE', {
+            name: 'Render Mode to use (work in progress)',
+            hint: 'Render Mode to use: Default is aerial for OSM and Drawn for anything else. ',
+            scope: 'world',
+            config: true,
+            default: 'default',
+            choices: {
+                default: "Default",
+                photo: "Aerial Photo",
+                draw: "Drawn Render",
             },
             type: String
         });
