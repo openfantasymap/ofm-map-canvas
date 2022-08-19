@@ -10,6 +10,10 @@ OFM Map Canvas is loosely based on https://github.com/mspellecacy/map-canvas
 
 OFM Map Canvas provides a dialog box containing a FantasyMaps/OpenStreetMap/OpenHistoryMap view port allowing you to export the corresponding battlemap as a scene for use in play. 
 
-Walls, lights and scenery are generated based on the vectors on the platform. 
+Walls, lights and scenery are generated based on the vectors on OFM or OSM or OHM.
+
+To install it on Foundry, it is here: https://foundryvtt.com/packages/ofm-map-canvas
+
+Help us grow by sponsoring here or on [Patreon](https://www.patreon.com/openfantasymap)!
 
 ![Map view]("/Map view.png" "Map view")
