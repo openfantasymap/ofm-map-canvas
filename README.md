@@ -16,4 +16,4 @@ To install it on Foundry, it is here: https://foundryvtt.com/packages/ofm-map-ca
 
 Help us grow by sponsoring here or on [Patreon](https://www.patreon.com/openfantasymap)!
 
-![Map view]("/assets/images/Map view.png" "Map view")
+![Map view]("/assets/images/Map view.png")
