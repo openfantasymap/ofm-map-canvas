@@ -12,7 +12,9 @@ class MapDialog extends FormApplication {
                 await $.getScript('https://polyfill.io/v3/polyfill.min.js?features=default', () => {});
                 await $.getScript('https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.js', () => {});
                 const LICENSE = game.settings.get("ofm-map-canvas", "LICENSE");
+                console.log('getting options');
                 //window['ofmmapcanvas'].options = await $.getJSON('https://vectors.fantasymaps.org/options/?key=' + LICENSE);
+                console.log('got options');
                 window['ofmmapcanvas'].apiLoaded = true;  // We assume.
             }
             MapDialog.initMap();
@@ -304,6 +306,10 @@ class MapCanvas extends Application {
             lights: vectors.lights,
             //tokens: vectors.tokens,
             tiles: vectors.tiles,
+            ofm: true,
+            ofmWorld: WORLD_TO_LOAD,
+            ofmBbox: bbox,
+            ofmLicense: LICENSE
         };     
         
         //if(WORLD_TO_LOAD === 'osm'){
@@ -354,7 +360,7 @@ class MapCanvas extends Application {
         
         await game.settings.register('ofm-map-canvas', 'LICENSE', {
             name: 'License Key',
-            hint: 'Go to Fantasymaps.org or [patreon] to get a license key for the special features.',
+            hint: 'Go to <a href="">Fantasymaps.org</a> or <a href="https://www.google.com" target="_blank">[patreon]</a> to get a license key for the special features.',
             scope: 'world',
             config: true,
             type: String,
@@ -363,15 +369,17 @@ class MapCanvas extends Application {
         });
 
         await game.settings.register('ofm-map-canvas', 'WORLD_TO_LOAD', {
-            name: 'Fantasy Map to load',
-            hint: 'Fantasy map to load',
+            name: 'Map to load',
+            hint: 'map to load',
             scope: 'world',
             config: true,
             default: 'toril',
             choices: {
-                toril: "Toril",
-                barovia: "Barovia",
-                osm: "OpenStreetMap",
+                toril: "FantasyMaps: Toril",
+                barovia: "FantasyMaps: Barovia",
+                rock_of_bral_upper: "FantasyMaps: Rock of Bral - Upper side",
+                rock_of_bral_lower: "FantasyMaps: Rock of Bral - Lower side",
+                osm: "OpenStreetMap: Real World",
             },
             type: String
         });
