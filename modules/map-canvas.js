@@ -162,6 +162,8 @@ class MapCanvas extends Application {
         Hooks.on('mapCanvasGenerateScene', () => this.updateScene(true));
         Hooks.on('mapCanvasUpdateScene', this.updateScene);
 
+        Hooks.on('ofmSharedWorldUpdateScene', (args) => this.sharedUpdateScene(args));
+
         // Register our settings
         Hooks.once('init', () => {
             MapCanvas.registerSettings(options).then(() => console.log("MapCanvas Settings Registered."));
@@ -224,6 +226,10 @@ class MapCanvas extends Application {
         });
     }
 
+    async sharedUpdateScene(args){
+        await this.imgUpdateScene.call(this, ...args);
+    }
+
     async updateScene(generateNewScene = false) {
         const LICENSE = game.settings.get("ofm-map-canvas", "LICENSE");
         const RENDER_MODE = game.settings.get("ofm-map-canvas", "RENDER_MODE");
@@ -256,22 +262,21 @@ class MapCanvas extends Application {
             HEIGHT *= 2;
         }
 
-
+        
         const bbox = [jdoc.bounds._sw.lng, jdoc.bounds._sw.lat, jdoc.bounds._ne.lng, jdoc.bounds._ne.lat];
-
-        const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/'+ WORLD_TO_LOAD +'?width='+WIDTH+'&height='+HEIGHT+'&bbox=['+bbox.join(',')+']&zoom='+jdoc.zoom+'&key='+LICENSE);
+        
+        await this.imgUpdateScene(scene.id, sceneName, WORLD_TO_LOAD, WIDTH, HEIGHT, bbox, jdoc.zoom, LICENSE, RENDER_MODE, generateNewScene );
+    }
+    async imgUpdateScene(sceneId, sceneName, WORLD_TO_LOAD, WIDTH, HEIGHT, bbox, ZOOM, LICENSE, RENDER_MODE, generateNewScene) {
+        console.log('imgUpdateScene', sceneId, sceneName, WORLD_TO_LOAD, WIDTH, HEIGHT, bbox, ZOOM, LICENSE, RENDER_MODE, generateNewScene)
+        const vectors = await $.getJSON('https://vectors.fantasymaps.org/vectors/'+ WORLD_TO_LOAD +'?width='+WIDTH+'&height='+HEIGHT+'&bbox=['+bbox.join(',')+']&zoom='+ZOOM+'&key='+LICENSE);
 
         console.log(vectors.tiles);
-
-
 
         if (!generateNewScene) {
             await canvas.lighting.deleteAll();
             await canvas.walls.deleteAll();
             await canvas.tokens.deleteAll();
-            await canvas.foreground.objects.destroy();
-            await canvas.background.objects.destroy()
-            await canvas.sight.resetFog();
         }
 
         //await const fileUtils = game.modules.get('foundry-file-utils');
@@ -279,7 +284,7 @@ class MapCanvas extends Application {
             await FilePicker.createDirectory('data', 'ofm-map-canvas');
         } catch(ex){ }
 
-        const url = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + jdoc.zoom + '&key='+LICENSE + "&mode=" + RENDER_MODE;
+        const url = 'https://vectors.fantasymaps.org/render/' + WORLD_TO_LOAD + '.jpeg?width='+WIDTH+'&height='+HEIGHT+'&bbox=[' + bbox.join(',') + ']&zoom=' + ZOOM + '&key='+LICENSE + "&mode=" + RENDER_MODE;
         console.log(url)
         const data = await fetch(url);
         console.log(data)
@@ -290,7 +295,7 @@ class MapCanvas extends Application {
 
 
         let updates = {
-            _id: scene.id,
+            _id: sceneId,
             width: WIDTH,
             height: HEIGHT,
             bgSource: 'ofm-map-canvas/'+sceneName+".jpeg",
@@ -306,10 +311,13 @@ class MapCanvas extends Application {
             lights: vectors.lights,
             //tokens: vectors.tokens,
             tiles: vectors.tiles,
-            ofm: true,
-            ofmWorld: WORLD_TO_LOAD,
-            ofmBbox: bbox,
-            ofmLicense: LICENSE
+            flags:{
+                ofm: true,
+                ofmWorld: WORLD_TO_LOAD,
+                ofmBbox: bbox,
+                ofmLicense: LICENSE,
+                renderArgs: [sceneId, sceneName, WORLD_TO_LOAD, WIDTH, HEIGHT, bbox, ZOOM, LICENSE, RENDER_MODE, false]
+            }
         };     
         
         //if(WORLD_TO_LOAD === 'osm'){

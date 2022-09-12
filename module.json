@@ -1,4 +1,5 @@
 {
+  "id": "ofm-map-canvas",
   "name": "ofm-map-canvas",
   "title": "FantasyMaps map canvas",
   "description": "Create scenes with FantasyMaps vectors.",
