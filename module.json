@@ -1,19 +1,32 @@
 {
   "id": "ofm-map-canvas",
-  "name": "ofm-map-canvas",
   "title": "FantasyMaps map canvas",
   "description": "Create scenes with FantasyMaps vectors.",
   "version": "This is auto replaced",
-  "library": "false",
-  "manifestPlusVersion": "0.0.1",
-  "minimumCoreVersion": "9.0",
-  "compatibleCoreVersion": "10.0",
-  "author": "FantasyMaps [OpenHistoryMap team]",
+  "authors": [
+    {
+      "name": "FantasyMaps [OpenHistoryMap team]",
+      "url": "https://www.fantasymaps.org",
+      "discord": "sirmmo#0100"
+    }
+  ],
+  "compatibility": {
+    "minimum": 11,
+    "verified": 13
+  },
   "esmodules": [
     "modules/map-canvas.js"
   ],
-  "url": "https://github.com/openfantasymap/ofm-map-canvas/tree/main",
-  "manifest": "raw.githubusercontent.com/openfantasymap/ofm-map-canvas/main/module.json",
+  "scripts": [
+    "modules/vendor/maplibre-gl.js"
+  ],
+  "styles": [
+    "modules/vendor/maplibre-gl.css"
+  ],
+  "url": "https://github.com/openfantasymap/ofm-map-canvas",
+  "manifest": "https://raw.githubusercontent.com/openfantasymap/ofm-map-canvas/main/module.json",
   "download": "This is auto replaced",
-  "dependencies": []
+  "relationships": {
+    "requires": []
+  }
 }

@@ -1,84 +1,50 @@
 <style>
-    #mapPortal {
-        position: relative;
-        padding-bottom: 75%;
-        height: 0;
-        overflow: hidden;
-    }
-
-    #mapPortal iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100% !important;
-        height: 100% !important;
-    }
-
     #mapCanvasContainer {
         display: flex;
-        gap: 10px;
         flex-direction: column;
-        justify-content: center;
-        height: 768px;
-        width: 1024px;
-        
-        top: 57px;
-        position: absolute;
+        gap: 10px;
+        height: 100%;
+        width: 100%;
     }
 
-    #mapCanvasZoomLevel {
-        align-self: end;
-        max-width: 100px;
+    #inputHolder {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
-    #mapCanvasLon {
-        align-self: end;
-        max-width: 100px;
+
+    #mapPortal {
+        flex: 1 1 auto;
+        min-height: 500px;
+        position: relative;
     }
+
+    #mapCanvasZoomLevel,
+    #mapCanvasLon,
     #mapCanvasLat {
-        align-self: end;
-        max-width: 100px;
+        max-width: 120px;
     }
-    .label{
-        display: inline-block;
-        height: 25px;
-        vertical-align: center;
+
+    .ofmc-spacer {
+        flex: 1 1 10px;
+    }
+
+    .ofmc-label {
+        padding: 0 4px;
         line-height: 26px;
-        padding-left: 6px;
-        padding-right: 2px;
     }
 </style>
 
-<form id="mapPortalForm">
+<form id="mapPortalForm" autocomplete="off">
     <div id="mapCanvasContainer">
-        <div id="inputHolder" style="display: flex">
-            <!--<input type="button" id="updateBtn" onClick="updateScene()" value="Update Scene">-->
-            <input type="button" id="generateBtn" onClick="generateScene()" value="Generate Scene">
+        <div id="inputHolder">
+            <input type="button" id="generateBtn" value="Generate Scene">
             <input type="hidden" id="mapData" value="">
-            <span class="spacer" style="flex: 1 1 10px"></span>
-            <!--<input type="button" onClick="toggleLabels()" value="Labels">-->
-            <!--<span class="label">Search:</span><input type="text" id="mapCanvasTime" value="" placeholder="search" style="align-self: flex-end" onkeyup="onKeyUp()">-->
-            <span class="label">Time:</span><input type="text" id="mapCanvasTime" value="" placeholder="t" style="align-self: flex-end" disabled>
-            <span class="label">Z:</span><input type="text" id="mapCanvasZoomLevel" value="" placeholder="z" style="align-self: flex-end" disabled>
-            <span class="label">X:</span><input type="text" id="mapCanvasLon" value="" placeholder="x" style="align-self: flex-end" disabled>
-            <span class="label">Y:</span><input type="text" id="mapCanvasLat" value="" placeholder="y" style="align-self: flex-end" disabled>
+            <span class="ofmc-spacer"></span>
+            <span class="ofmc-label">Z:</span><input type="text" id="mapCanvasZoomLevel" placeholder="z" disabled>
+            <span class="ofmc-label">X:</span><input type="text" id="mapCanvasLon" placeholder="x" disabled>
+            <span class="ofmc-label">Y:</span><input type="text" id="mapCanvasLat" placeholder="y" disabled>
         </div>
-        <div class="mapPortal" id="mapPortal"></div>
+        <div id="mapPortal"></div>
     </div>
 </form>
-
-<script type="application/javascript">
-   function generateScene() {
-       Hooks.call('mapCanvasGenerateScene');
-   }
-   function updateScene() {
-       Hooks.call('mapCanvasUpdateScene');
-   }
-   function toggleLabels() {
-       Hooks.call('mapCanvasToggleLabels');
-   }
-
-   function onKeyUp(){
-       Hooks.call('onKeyUp');
-   }
-</script>
-
