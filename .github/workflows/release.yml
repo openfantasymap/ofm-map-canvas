@@ -1,6 +1,8 @@
 name: Release
 
 on:
+  push:
+    tags: ['v*']
   release:
     types: [published]
 
@@ -17,7 +19,7 @@ jobs:
         id: meta
         run: |
           set -euo pipefail
-          TAG="${{ github.event.release.tag_name }}"
+          TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#v}"
           REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
           MANIFEST_LATEST="${REPO_URL}/releases/latest/download/module.json"
@@ -55,10 +57,12 @@ jobs:
             -x '.git/*' '.github/*' '.gitignore' '.gitattributes' 'module.zip'
           ls -lh module.zip
 
-      - name: Attach assets to release
+      - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.tag }}
+          generate_release_notes: true
           files: |
             module.json
             module.zip
