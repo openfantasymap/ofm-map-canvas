@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive release metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+          MANIFEST_LATEST="${REPO_URL}/releases/latest/download/module.json"
+          MANIFEST_TAG="${REPO_URL}/releases/download/${TAG}/module.json"
+          DOWNLOAD_TAG="${REPO_URL}/releases/download/${TAG}/module.zip"
+          NOTES_URL="${REPO_URL}/releases/tag/${TAG}"
+          PACKAGE_ID=$(jq -r '.id' module.json)
+          {
+            echo "tag=$TAG"
+            echo "version=$VERSION"
+            echo "manifest_latest=$MANIFEST_LATEST"
+            echo "manifest_tag=$MANIFEST_TAG"
+            echo "download_tag=$DOWNLOAD_TAG"
+            echo "notes_url=$NOTES_URL"
+            echo "id=$PACKAGE_ID"
+            echo "repo_url=$REPO_URL"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Patch module.json for release
+        run: |
+          set -euo pipefail
+          jq \
+            --arg v "${{ steps.meta.outputs.version }}" \
+            --arg u "${{ steps.meta.outputs.repo_url }}" \
+            --arg m "${{ steps.meta.outputs.manifest_latest }}" \
+            --arg d "${{ steps.meta.outputs.download_tag }}" \
+            '.version = $v | .url = $u | .manifest = $m | .download = $d' \
+            module.json > _module.json
+          mv _module.json module.json
+          jq '{id, version, url, manifest, download, compatibility}' module.json
+
+      - name: Build module.zip
+        run: |
+          zip -r module.zip . \
+            -x '.git/*' '.github/*' '.gitignore' '.gitattributes' 'module.zip'
+          ls -lh module.zip
+
+      - name: Attach assets to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          files: |
+            module.json
+            module.zip
+
+      - name: Publish to FoundryVTT Package Release API
+        env:
+          FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FOUNDRY_RELEASE_TOKEN:-}" ]; then
+            echo "::warning::FOUNDRY_RELEASE_TOKEN secret is not configured for this repo — skipping foundryvtt.com publish."
+            exit 0
+          fi
+          MIN=$(jq -r '.compatibility.minimum // empty' module.json)
+          VER=$(jq -r '.compatibility.verified // empty' module.json)
+          MAX=$(jq -r '.compatibility.maximum // ""' module.json)
+          if [ -z "$MIN" ] || [ -z "$VER" ]; then
+            echo "::error::module.json compatibility.minimum and compatibility.verified are required"
+            exit 1
+          fi
+          body=$(jq -n \
+            --arg id       "${{ steps.meta.outputs.id }}" \
+            --arg version  "${{ steps.meta.outputs.version }}" \
+            --arg manifest "${{ steps.meta.outputs.manifest_tag }}" \
+            --arg notes    "${{ steps.meta.outputs.notes_url }}" \
+            --arg min      "$MIN" \
+            --arg ver      "$VER" \
+            --arg max      "$MAX" \
+            '{ id: $id,
+               release: {
+                 version: $version,
+                 manifest: $manifest,
+                 notes: $notes,
+                 compatibility: ({ minimum: $min, verified: $ver }
+                                 + (if $max == "" then {} else { maximum: $max } end))
+               } }')
+          echo "POST body:"
+          echo "$body" | jq .
+          http=$(curl -sS -o /tmp/resp.json -w '%{http_code}' \
+            -X POST 'https://foundryvtt.com/_api/packages/release_version/' \
+            -H 'Content-Type: application/json' \
+            -H "Authorization: $FOUNDRY_RELEASE_TOKEN" \
+            -d "$body")
+          echo "HTTP $http"
+          cat /tmp/resp.json
+          echo
+          test "$http" -lt 400
